@@ -1,0 +1,875 @@
+---
+title: "<font color='white' face='Arial Black'> Dashboard De Aciendentes  </font> "
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+    social: [ "twitter", "facebook", "menu"]
+    #source_code: embed
+      
+---
+
+
+<style>
+.navbar {
+  background-color:#ff0015;
+   border-color: #ff0015;
+   font-family: "Times New Roman", serif;
+}
+
+.navbar-inverse .navbar-nav > li > a:hover,
+.navbar-inverse .navbar-nav > li > a:focus {
+    background-color: #91191d;
+    color: white;
+}
+.navbar-inverse .navbar-nav > .active > a,
+.navbar-inverse .navbar-nav > .active > a:hover,
+.navbar-inverse .navbar-nav > .active > a:focus {
+  color: white;
+  background-color: #63070a;
+}
+.navbar-inverse .navbar-toggle:hover,
+.navbar-inverse .navbar-toggle:focus {
+  background-color: #ff0015;
+}
+.navbar-inverse .navbar-collapse,
+.navbar-inverse .navbar-form {
+  border-color: #ff0015;
+}
+</style>    
+
+
+
+
+```{css my-header-colors, echo = FALSE}
+
+body {
+  background-color: rgb(145, 25, 25);
+  
+}
+
+badCode {
+background-color: red;
+}
+
+
+
+}
+```
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(knitr)
+library(DT)
+library(rpivotTable)
+library(ggplot2)
+library(plotly)
+library(dplyr)
+library(openintro)
+library(highcharter)
+library(ggvis)
+library(readxl)
+#rm(list=ls())
+
+
+verme.theme<-theme(plot.background = element_rect(fill = '#e39898'),
+                  
+                  plot.title=element_text(colour='#181819',
+                                          hjust=.5),
+                  plot.subtitle=element_text(colour =  '#e39898',
+                                             hjust=.5),
+                  legend.title = element_text(colour='#181819',
+                                              hjust=.5),
+                  #legend.box.background =  element_rect(fill="lightblue",
+                                                        #size=0.5, linetype="solid")
+                  legend.background = element_blank(),
+                  legend.box.background = element_blank(),
+                  legend.key = element_blank(),
+                  axis.text=element_text(colour = '#181819'),
+                  panel.background =element_rect(fill = '#e39898'),
+                  panel.grid.major.x = element_blank(),
+                  panel.grid.minor.x = element_blank(),
+                  panel.grid.minor.y = element_blank(),
+                  panel.grid.major.y = element_blank(),
+                  axis.ticks.x.bottom = element_blank(),
+                  axis.ticks.x = element_blank(),
+                  axis.title = element_text(colour ='#181819'))
+
+
+
+
+```
+
+
+```{r}
+#data <- read.csv("C:/Users/josef/Documents/R-files-from-YouTube-main/vehicle.csv")
+dados<-read_excel("./BD-PRF-SUDESTE.xlsx")
+
+# clonando a coluna para criar a coluna ano 
+dados$ano <-as.character(dados$data)
+
+
+
+
+#renomeando a coluna ano =2018 
+
+  dados$ano[dados$ano < "2019-01-01"]<-"2018"
+  
+  
+  #renomeando a coluna ano =2020
+  dados$ano[dados$ano > "2019-12-31" ]<-"2020"
+
+  
+  #renomeando a coluna ano =2019
+  dados$ano[dados$ano >= "2019-01-01" & dados$ano < "2020"]<-"2019"
+
+
+```
+
+```{r}
+mycolors <- c("blue", "#FFC125", "darkgreen", "darkorange")
+```
+
+<font color='white'  > Vizualização </font>  
+=====================================
+
+Row {data-width=50}
+-------------------------------------
+
+
+
+### <font color='black' face="Arial Black" > Ilesos </font>  
+
+```{r}
+valueBox(sum(dados$ilesos),
+         icon = 'fa-male')
+
+
+```
+
+### <font color='black' face="Arial Black" >  Levemente Feridos  </font> 
+
+```{r}
+valueBox(sum(dados$feridos_leves),
+         icon = 'fa-medkit')
+```
+
+
+
+
+
+
+
+
+
+
+
+
+### <font color='black' face="Arial Black"> Das Incidências  na BR101-Es    </font>
+
+```{r}
+
+valor<-dados %>%
+   group_by(br,uf) %>%
+   summarise(cnt = n()) %>%
+   mutate(porcent = paste(round(cnt / sum(cnt)*100, 1),"%"))
+   
+
+
+valueBox(valor[1,4,],
+         color = "warning", icon = "fa-road")
+
+
+
+
+
+```
+
+### <font color='black' face="Arial Black"> Dos Acindentes Ocorreram Em Tempo Bom   </font>
+
+```{r}
+
+
+
+
+valor<-dados %>%
+   group_by(condicao_metereologica) %>%
+   summarise(cnt = n()) %>%
+   mutate(porcent = paste(round(cnt / sum(cnt)*100, 1),"%"))
+   
+
+
+
+
+valueBox(valor[1,3,],
+         icon = "fa-user")
+
+
+
+
+
+
+
+
+```
+
+
+
+
+### <font color='red' face="Arial Black">  Total De Óbitos   </font>
+
+```{r}
+gauge(round(sum(dados$mortos),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+
+
+
+
+### <font color='black' face="Arial Black" > Total De Feridos </font> 
+
+```{r}
+valueBox(sum(dados$feridos),
+         icon = 'fa-heartbeat')
+
+
+```
+
+### <font color='black' face="Arial Black" > Gravimente Feridos </font> 
+
+```{r}
+valueBox(sum(dados$feridos_graves),
+         icon = 'fa-hospital')
+```
+
+
+Column {data-width=450}
+-----------------------------------------------------------------------
+
+<img src="C:\Users\josef\Downloads\graveyard.png"  title="logo da homeHost" style="position: absolute;
+  right: 0;
+  top:100px;
+  width: 54px;
+  height: 41px;
+   left: 789px;">
+
+
+### <font color='red' face="Arial Black" > Números De Acidentes Por Ano </font> 
+```{r}
+p1 <- dados %>%
+         group_by(ano) %>%
+         summarise(count = n()) %>%
+         plot_ly(x = ~ano,
+                 y = ~count,
+                 color = "blue",
+                 type = 'bar',marker = list(color = 'rgb(250, 31, 2)',
+                      line = list(color = 'rgb(250, 31, 2)',
+                                  width = 1.5))) %>%
+layout(xaxis = list(title = "ano"),
+yaxis = list(title = 'numero de acidentes'))%>%
+        layout( paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor='rgba(0,0,0,0)',xaxis = list( 
+           zerolinecolor = '#ffff', 
+          zerolinewidth = 2, 
+           gridcolor = 'ffff'), 
+         yaxis = list( 
+           zerolinecolor = '#ffff', 
+           zerolinewidth = 2, 
+           gridcolor = 'ffff'),font = list(color = 'black'))
+p1
+```
+
+###  <font color='red' face="Arial Black"> Fase Do Dia Que Mais Ocorreram Acidentes  </font> 
+
+```{r}
+#p2 <- data %>%
+       #  group_by(State) %>%
+        # summarise(count = n()) %>%
+       #  filter(count>50) %>%
+         #plot_ly(labels = ~State,
+               #  values = ~count,
+                # marker = list(colors = mycolors)) %>%
+        # add_pie(hole = 0.5) %>%
+         #layout(xaxis = list(zeroline = F,
+           #                  showline = F,
+            #                 showticklabels = F,
+            #                 showgrid = F),
+             #   yaxis = list(zeroline = F,
+               #              showline = F,
+                #             showticklabels=F,
+                    #         showgrid=F))
+
+
+#p2
+
+
+
+#  fase do dia que mais ocorreram acidentes 
+ 
+ library(dplyr)
+ library(plotly)
+ 
+ # como calcular a porcentagem no r 
+ 
+ 
+ teste4<-dados %>%
+   group_by(fase_dia) %>%
+   summarise(cnt = n()) %>%
+   mutate(porcent = round(cnt / sum(cnt)*100, 3)) %>% 
+   arrange(desc(porcent))
+ 
+ 
+ 
+ #grafico  pelo plotly
+
+ 
+ colors <- c("#ffe7e6", "#ffa8a5", "#ff4f3b", "#920007")
+ 
+ p2 <- dados%>%
+  group_by(fase_dia) %>%
+  summarise(count = n()) %>%
+  filter(count>50) %>%
+ plot_ly(labels = ~fase_dia,
+   values = ~count,
+ marker = list(colors = colors,
+                      line = list(color = '#800305', width = 1)),
+                      #The 'pull' attribute can also be used to create space between the sectors
+        showlegend = TRUE) %>%
+  add_pie(hole = 0.5) %>%
+ layout(xaxis = list(zeroline = F,
+                   showline = F,
+                  showticklabels = F,
+                  showgrid = F),
+    yaxis = list(zeroline = F,
+               showline = F,
+              showticklabels=F,
+          showgrid=F)) %>%
+        layout( paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor='rgba(0,0,0,0)',xaxis = list( 
+           zerolinecolor = '#ffff', 
+          zerolinewidth = 2, 
+           gridcolor = 'ffff'), 
+         yaxis = list( 
+           zerolinecolor = '#ffff', 
+           zerolinewidth = 2, 
+           gridcolor = 'ffff'),font = list(color = 'black'))
+ 
+ p2
+ 
+
+
+```
+
+### <font color='red' face="Arial Black"> Rodovias Onde Ocorreram Os Acidentes  </font>  
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(viridis)
+       # library(brazilmaps) 
+library(geobr)
+library(sf)
+library(maptools)
+library(leaflet)
+dados$numeroacidente<-as.numeric(cbind(rep(1,nrow(dados))))
+              
+       
+#mapa <- read_state(showProgress = FALSE)      
+
+#valores<-aggregate(dados$numeroacidente,by=list(abbrev_state= dados$uf), FUN=sum)
+
+#coord_pontos <- mapa %>% 
+  #left_join(valores, by = "abbrev_state") %>% 
+ # st_centroid()  
+
+#final<-aggregate(coord_pontos$x,by=list(abbrev_state= coord_pontos$abbrev_state,
+              #  code_state = coord_pontos$code_state), FUN=sum,na.rm=TRUE)
+
+ 
+
+
+#acesso_san <- data.frame(code_state = final$code_state, 
+                         #com_rede = final$x)
+
+
+#coord_pontos <- mapa %>% 
+ # left_join(acesso_san, by = "code_state") %>% 
+ # mutate(com_rede = com_rede) %>% 
+#  st_centroid()
+
+#p<-ggplot(mapa)+ 
+ # geom_sf() + 
+  #geom_sf(data = coord_pontos, aes(size = com_rede), col = "blue", alpha = .65,
+     #     show.legend = "point") + 
+ # scale_size_continuous(name = "Municípios com rede de esgoto (%)")
+
+#--------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+#==============================================================================
+
+
+#grafico de mapa da rodovia  onde ocorreram os acidentes por estado 
+
+ leaflet(dados) %>% addTiles() %>%
+  addProviderTiles(providers$CartoDB.Positron) %>% 
+  addCircleMarkers(
+    radius = ~sqrt(dados$numeroacidente),
+    fillOpacity = 0.1, stroke = F ,fillColor = "red",
+    popup = paste0("<b>Cidade: </b>", dados$uf,"<br>",
+                   "<b>Casos Confirmados: </b>", dados$numeroacidente),
+    label = paste0("BR", dados$br,":",dados$uf)
+  )
+```
+
+Row
+------------------------------------
+### <font color='red' face="Arial Black" >Total De Acidentes Por Mês </font> 
+
+```{r}
+#criando a nova coluna 
+dados$numeroacidente<-as.numeric(cbind(rep(1,nrow(dados))))
+
+
+
+dados$mes<-as.Date(dados$data)
+
+dados$mes<-months(dados$data)
+
+dados <-  dados %>% arrange(dados$data)
+
+
+tabela<-aggregate(dados$numeroacidente,by=list(mes=dados$mes,ano=dados$ano), FUN=sum)
+
+tabela<-tabela %>% arrange(tabela$mes) 
+
+
+
+
+
+atualizado <-c(4,8,12,2,1,7,6,5,3,11,10,9,16,20,24,14,13,18,19,17,15,23,22,21,
+               28,32,36,26,25,31,30,29,27,35,34,33
+               )
+
+
+
+tabela<-tabela %>% arrange(tabela$ano)
+
+
+
+tabela$demes<-atualizado
+
+ tabela<-tabela %>% arrange(tabela$demes)
+ 
+ 
+ 
+ 
+ tabela2 <- tabela %>%
+   mutate(Month1 = factor(mes, levels = c("janeiro","fevereiro","março","abril","maio","junho",
+                         "julho","agosto","setembro","outubro","novembro","dezembro")))
+
+ tabela2$abrev<-c("jan","fev","mar","abr","maio","jun","jul","Ago","Set","Out","nov","Dez")
+ tabela3 <-tabela2 %>%
+  mutate(sig=factor(abrev,levels =c("jan","fev","mar","abr","maio","jun","jul","Ago","Set","Out","nov","Dez")))
+ 
+
+
+ 
+p<- tabela3%>% 
+   ggplot(aes(x =sig, y =x, group = ano, color = ano)) +geom_point(size=1)+
+   geom_line()+ scale_color_manual(values = c("#db0000", "#754c00", "#570001"))+verme.theme+labs(y="Acidentes" ,x="meses")
+
+ 
+
+ggplotly(p)
+
+```
+
+### <font color='red' face="Arial Black" > principais causas de acidente  </font>
+
+```{r}
+#criando a nova coluna 
+dados$numeroacidente<-as.numeric(cbind(rep(1,nrow(dados))))
+
+tabela<-aggregate(dados$numeroacidente,by=list(causas= dados$causa_acidente), FUN=sum)
+
+tabela <- tabela %>% arrange(tabela$x) 
+ 
+tabela<-tabela %>% arrange(desc(tabela$x))
+
+tabela$ord<-as.numeric(rownames(tabela))
+tabela <-  tabela[1:7,]
+
+
+
+tabela2<-arrange(tabela,desc(-tabela$x))
+
+tabela2$causas<-as.factor(tabela2$causas)
+
+newtabela <- tabela[order(-tabela$ord),]
+
+
+
+
+
+
+
+
+
+
+idx <- order(tabela$ord, decreasing = TRUE)
+# criar os níveis ordenados
+levels <- tabela$causas[idx]
+# criar um factor com níveis ordenados
+tabela$causas <- factor(tabela$causas, levels=levels, ordered=TRUE)
+
+
+
+
+
+p<-ggplot(tabela, aes(x=x, y=causas, fill=causas)) +
+  geom_bar(stat='identity') +
+  labs(x=NULL, y='causas',size =.3) +
+  scale_y_discrete(breaks = c("2", "4", "6","8","7","6","3","2"))+
+  scale_color_manual(labels = c("Pista/n Escorregadia","Ingestão de Álcool","Ingestão de Álcool","Defeito Mecânico no Veículo",
+"Desobediência às normas de trânsito pelo condutor","Velocidade Incompatível","Falta de Atenção à Condução"))+ theme_light()+scale_fill_manual(values = c("#ffe7e6","#ffb0ae","#ffa8a5","#ff7062","#ff4f3b","#eb2d00","#920007"))+verme.theme
+ 
+  ggplotly(p)                  
+       
+
+```
+
+
+```{r echo=FALSE}
+
+#ligar depois results='hide'
+library(geobr)
+
+
+municipios<-read_municipality(code_muni = "all")
+
+library(ggplot2)
+
+
+
+
+
+colnames(municipios)[2]<-"name"
+
+
+
+est<-read_state(code_state = "all")
+
+```
+<font color='white' > Região  </font> 
+========================================
+
+### Map
+
+```{r }
+
+basedados<-aggregate(dados["numeroacidente"],
+        by=list(name=dados$municipio,abbrev_state=dados$uf), FUN=sum)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+unidos<-left_join(municipios, basedados, by = "abbrev_state")
+
+
+
+
+basedados2<-aggregate(dados["numeroacidente"], by=list(abbrev_state=dados$uf), FUN=sum)
+
+fusao<-full_join(est,basedados2,by = "abbrev_state")
+
+
+
+P<-ggplot(fusao)+geom_sf(aes(fill = numeroacidente)) +
+  geom_sf_label(aes(label =abbrev_state),label.padding = unit(0.5, "mm"),size = 3)
+
+
+library(plotly)
+
+ggplotly(P)
+
+```
+
+<font color='white' > Dados </font> 
+========================================
+
+```{r}
+dados1<-read_excel("./BD-PRF-SUDESTE.xlsx")
+datatable(dados1,
+          caption = "Acidentes Na Região Sudeste",
+          rownames = T,
+          filter = "top",
+          options = list(pageLength = 25))
+```
+
+
+<font color='white' > Resumo  </font> {data-orientation=columns} 
+===========================================
+
+Column 
+-----------------------------------
+
+### <font color='#913119' face="Arial Black" > Número De Meses Analisados </font> 
+
+```{r}
+mes<-aggregate(dados$numeroacidente, by=list(mes=dados$mes,ano=dados$ano), FUN=sum)
+valueBox(length(mes$mes),
+         icon = "fa-calendar" )
+```
+
+### <font color='#913119' face="Arial Black" > Número Médio De Acidentes Por Ano  </font> 
+```{r}
+valueBox(sum(dados$numeroacidente/3),
+         icon = "fa-area-chart")
+
+#duas formas de calcular o número de pessoas envolvidas no acidente 
+#
+
+#===============================================================================
+#                               forma 1
+#===============================================================================
+
+#t<-dados %>%
+  # group_by(pessoas) %>%
+  # summarise(cnt = n()) %>%
+  # mutate(pessoast = cnt)
+  # sum(t$pessoas*t$pessoast)
+ 
+#===============================================================================
+#                               forma 3
+#===============================================================================
+   
+  # K<-aggregate((dados$pessoas), by=list(id=dados$id), FUN=sum)
+  # sum(K$x)
+   
+```
+
+### <font color='#913119' face="Arial Black" > Ocorreram Em Rodovias De Mão Dupla  </font>  
+
+```{r}
+library(dplyr)
+#porcentagem de tipos de rodovias 
+tu<-dados %>%
+   group_by(tipo_pista) %>%
+   summarise(cnt = n()) %>%
+   mutate(porcent = paste(round(cnt / sum(cnt)*100, 1),"%")) %>% 
+   arrange(desc(porcent))
+
+
+K<-aggregate(dados$numeroacidente, by=list(tipo=dados$tipo_pista), FUN=sum)
+valueBox(tu[1,3,],
+         icon = "fa-road")
+
+# calculando o numero de pessoas envolvidas
+
+K<-aggregate(dados["pessoas"], by=list(id=dados$id), FUN=sum)
+
+#sum(K$pessoas)
+
+
+```
+
+Column
+---------------------------
+
+<font color='white' face="Arial Black" > Relatório  </font>
+
+* <font color='white' face="Arial Black" > Este é um relatório sobre `r length(dados$id)` Acidentes na região suldeste .  </font> 
+
+* <font color='white' face="Arial Black" > Número de pessoas envolvidas :  142.906  .  </font> 
+
+* <font color='white' face="Arial Black" > Número Médio De Acidentes Por Ano  20.177 .  </font> 
+
+
+
+
+<font color='white'>Este relatório foi gerado em `r format(Sys.Date(), format = "%B %d, %Y")` </font> 
+
+<font color='white' > Sobre o Relatório </font>
+========================================
+
+criado por: Joseferson da Silva  Barreto
+
+Atenção!: para uma melhor visualização do dashboard em seu navegador execute o seu  
+navegador em modo tela cheia ou clique em F11 no seu teclado!
+
+
+
+<style>
+
+
+#ocorreram-em-rodovias-de-mão-dupla {
+color: rgb(145, 49, 25);
+background-color: rgb(227, 152, 152);
+}
+
+#número-de-meses-analisados {
+color: rgb(145, 49, 25);
+background-color: rgb(227, 152, 152);
+}
+
+#número-médio-de-acidentes-por-ano {
+color: rgb(145, 49, 25);
+background-color: rgb(227, 152, 152);
+}
+
+#dashboard {
+background-color: rgb(227, 152, 152)
+}
+
+#das-incidências-na-br101-es {
+color: rgb(97, 21, 2);
+ width: 238px;
+  height: 133px;
+  font-size: 9pt;
+  border:4px solid #d1a997;
+border-radius: 12px;
+}
+
+#dos-acindentes-ocorreram-em-tempo-bom {
+color: rgb(145, 49, 25);
+background-color: rgb(227, 152, 152);
+ width: 238px;
+  height: 133px;
+  border:4px solid #d1a997;
+border-radius: 12px;
+}
+
+#levemente-feridos {
+color: rgb(145, 49, 25);
+background-color: rgb(255,201,143);
+ width: 238px;
+  height: 133px;
+  border:4px solid #d1a997;
+border-radius: 12px;
+}
+
+#ilesos {
+color: rgb(145, 49, 25);
+background-color: rgb(203, 227, 154);
+ width: 238px;
+  height: 133px;
+  border:4px solid #d1a997;
+border-radius: 12px;
+}
+
+#gravimente-feridos {
+color: rgb(145, 49, 25);
+background-color: rgb(227, 152, 152);
+ width: 238px;
+  height: 133px;
+  border:4px solid #d1a997;
+border-radius: 12px;
+}
+
+#total-de-óbitos {
+color: rgb(145, 49, 25);
+background-color: rgb(227, 152, 152);
+ width: 238px;
+  height: 133px;
+  border:4px solid #d1a997;
+border-radius: 12px;
+}
+
+#total-de-feridos {
+text-align: center;
+color: black;
+background-color: rgb(236, 35, 0);
+ width: 238px;
+  height: 133px;
+  border:4px solid #d1a997;
+border-radius: 12px;
+}
+
+#car-failure-analysis{
+width: 238px;
+  height: 133px;
+  background-color: rgb(227, 152, 152);
+  border:4px solid #d1a997;
+border-radius: 12px;
+}
+
+#car-failures-in-us{
+width: 238px;
+  height: 133px;
+  background-color: rgb(227, 152, 152);
+  border:4px solid #d1a997;
+border-radius: 12px;
+}
+
+#labor-cost {
+ width: 238px;
+  height: 133px;
+  background-color: rgb(227, 152, 152);
+  border:4px solid #d1a997;
+border-radius: 12px;
+}
+
+#números-de-acidentes-por-ano {
+text-align: center;
+color: red;
+background-color: rgb(227, 152, 152);
+ border:4px solid #d1a997;
+ border-radius: 12px;
+}
+
+#total-de-acidentes-por-mês {
+text-align: center;
+color: red;
+background-color: rgb(227, 152, 152);
+border:4px solid #d1a997;
+border-radius: 12px;
+}
+
+#rodovias-onde-ocorreram-os-acidentes {
+color: rgb(145, 49, 25);
+background-color: rgb(227, 152, 152);
+text-align: center;
+color: red;
+border:4px solid #d1a997;
+border-radius: 12px;
+ 
+}
+
+
+#fase-do-dia-que-mais-ocorreram-acidentes {
+ background-color: rgb(227, 152, 152);
+text-align: center;
+color: red;
+border:4px solid #d1a997;
+border-radius: 12px;
+ 
+}
+
+#principais-causas-de-acidente {
+ text-align: center;
+color: red;
+background-color: rgb(227, 152, 152);
+border:4px solid #d1a997;
+border-radius: 12px;
+}
+
+
+
+</style>  
